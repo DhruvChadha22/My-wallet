@@ -29,6 +29,9 @@ app.post("/bankWebhook", async (req, res) => {
                 update: {
                     amount: {
                         increment: Number(paymentInformation.amount)
+                    },
+                    locked: {
+                        decrement: Number(paymentInformation.amount)
                     }
                 }
             }),

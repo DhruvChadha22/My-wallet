@@ -33,18 +33,28 @@ export const authOptions = {
                 }
 
                 try {
-                    const user = await prisma.user.create({
-                        data: {
-                            number: credentials.phone,
-                            password: hashedPassword
+                    await prisma.$transaction(async (tx) => {
+                        const user = await prisma.user.create({
+                            data: {
+                                number: credentials.phone,
+                                password: hashedPassword
+                            }
+                        });
+
+                        await prisma.balance.create({
+                            data: {
+                                userId: user.id,
+                                amount: 0,
+                                locked: 0
+                            }
+                        });
+                    
+                        return {
+                            id: user.id.toString(),
+                            name: user.name,
+                            phone: user.number
                         }
                     });
-
-                    return {
-                        id: user.id.toString(),
-                        name: user.name,
-                        phone: user.number
-                    }
                 }
                 catch(e) {
                     console.error(e);

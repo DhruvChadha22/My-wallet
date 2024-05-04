@@ -13,20 +13,34 @@ export async function createOnRampTransaction(provider: string, amount: number) 
         }
     }
     const token = (Math.random() * 1000).toString();
-    const txn = await prisma.onRampTransaction.create({
-        data: {
-            provider,
-            status: "Processing",
-            startTime: new Date(),
-            token: token,
-            userId: Number(session?.user?.id),
-            amount: amount * 100
-        }
+
+    await prisma.$transaction(async (tx) => {
+        await tx.onRampTransaction.create({
+            data: {
+                provider,
+                status: "Processing",
+                startTime: new Date(),
+                token: token,
+                userId: Number(session?.user?.id),
+                amount: amount * 100
+            }
+        });
+
+        await tx.balance.update({
+            where: {
+                userId: Number(session?.user?.id)
+            },
+            data: {
+                locked: {
+                    increment: amount * 100
+                }
+            }
+        })
     });
 
     await axios.post("http://127.0.0.1:3003/bankWebhook", {
-        token: txn.token,
-        user_identifier: txn.userId,
+        token: token,
+        user_identifier: Number(session?.user?.id),
         amount: String(amount * 100)
     });
 
