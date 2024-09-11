@@ -4,6 +4,7 @@ import prisma from "@repo/db/client";
 import { getServerSession } from "next-auth";
 import { authOptions } from "../auth";
 import axios from "axios";
+import { Prisma } from "@prisma/client";
 
 export async function createOnRampTransaction(provider: string, amount: number) {
     const session = await getServerSession(authOptions);
@@ -14,7 +15,7 @@ export async function createOnRampTransaction(provider: string, amount: number) 
     }
     const token = (Math.random() * 1000).toString();
 
-    await prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
         await tx.onRampTransaction.create({
             data: {
                 provider,
@@ -38,7 +39,7 @@ export async function createOnRampTransaction(provider: string, amount: number) 
         })
     });
 
-    await axios.post("http://127.0.0.1:3003/bankWebhook", {
+    await axios.post(`${process.env.NEXT_PUBLIC_URL}/bankWebhook`, {
         token: token,
         user_identifier: Number(session?.user?.id),
         amount: String(amount * 100)

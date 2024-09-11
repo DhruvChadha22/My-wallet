@@ -1,6 +1,7 @@
 import prisma from "@repo/db/client";
 import Credentials from "next-auth/providers/credentials";
 import bcrypt from "bcrypt";
+import { Prisma } from "@prisma/client";
 
 export const authOptions = {
     providers: [
@@ -33,7 +34,7 @@ export const authOptions = {
                 }
 
                 try {
-                    await prisma.$transaction(async (tx) => {
+                    await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
                         const user = await prisma.user.create({
                             data: {
                                 number: credentials.phone,
